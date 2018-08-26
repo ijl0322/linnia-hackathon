@@ -8,7 +8,11 @@ import Web3 from 'web3'
 import IPFS from 'ipfs-api'
 import { Buffer } from 'buffer'
 
-const ipfs = new IPFS({ host: 'localhost', port: 5001, protocol: 'http' })
+const ipfs = new IPFS({
+  host: 'ipfs.infura.io',
+  port: 5001,
+  protocol: 'https'
+})
 const web3 = new Web3(window.web3.currentProvider)
 
 // const linnia = new Linnia(web3, ipfs)
@@ -25,9 +29,22 @@ class App extends Component {
     const publicKey = '0xae03ac628f811b8a5225bbc0547f3d38d13103fddb324b545c41f9479e763d8f083ec86f54e72e033f12e2870c1b64b93795c2d7312f51f5d0c0228eb2dd7b74'
     let encrypted = await Linnia.util.encrypt(publicKey, 'foo')
 
-    const ipfsRecord = await ipfs.add(Buffer(encrypted))
+    const [ ipfsRecord ] = await ipfs.add(Buffer(encrypted))
       .catch(console.log)
+    console.log("hello")
+    console.log(ipfsRecord)
 
+    const dataUri = ipfsRecord.hash;
+    const [owner] = await web3.eth.getAccounts();
+    const dataHash = await linnia.web3.utils.sha3(dataUri);
+    console.log(dataHash);
+
+    try {
+      const res = await records.addRecord(dataHash, 'foo', dataUri, { from: owner, gas: 50000 });
+      console.log(res)
+    } catch(e) {
+      console.log(e)
+    }
     // const tx = await records.addRecord(
     //   testDataHash,
     //   testMetaData,
@@ -37,8 +54,6 @@ class App extends Component {
     //     gas: 500000,
     //   },
     // )
-
-    // console.log({tx})
   }
   render() {
 
