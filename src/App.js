@@ -67,65 +67,86 @@ class App extends Component {
     console.log('trying to grand permission')
 
     const dataHash = await linnia.web3.utils.sha3('QmWbMGRV9Dp3YvjBkJLLVnHfL4JwxZgRv3JShiqjRvd2P5');
-    const record = await linnia.getRecord(dataHash);
-    console.log({record})
-    console.log(record.dataUri)
-    let file
-    try {
-      file = await new Promise((resolve, reject) => {
-        ipfs.cat(record.dataUri, (err, ipfsRed) => {
-          err ? reject(err) : resolve(ipfsRed);
-        });
-      });
-      console.log({file})
-    } catch (e) {
-      console.log(e)
-      return;
-    }
-    let decryptedData
-    // // Decrypt the file using the owner's private key
-    try {
-      const encryptedData = file.toString();
-      decryptedData = await this.decrypt('0xb581d5911f2983182558c7b376e37c65725add8230c82019b74ebc963d8f6b07', encryptedData);
-      console.log({decryptedData})
-    } catch (e) {
-      console.log(e)
-      return;
-    }
-    let reencrypted
-    try {
-      reencrypted = await Linnia.util.encrypt('0x67c396d711ad2ba7408f5b1951e0dcec84cb11b6e189f95cab9cff9ef230eb7afce76a42c666b9e2a3499756a8aaa529a375e01e033f80917d9db45f8cbdadef', decryptedData);
-    } catch (e) {
-      console.log(e)
-      return;
-    }
-    console.log(reencrypted)
-    // // Upload the viewer encrypted file up to a new location in IPFS
-    let IPFSDataUri
-    try {
-      [ IPFSDataUri ] = await new Promise((resolve, reject) => {
-        ipfs.add(Buffer(reencrypted), (err, ipfsRed) => {
-          err ? reject(err) : resolve(ipfsRed);
-        });
-      });
-    } catch (e) {
-      console.log(e)
-      return;
-    }
-    console.log(IPFSDataUri)
+    // const record = await linnia.getRecord(dataHash);
+    // console.log({record})
+    // console.log(record.dataUri)
+    // let file
+    // try {
+    //   file = await new Promise((resolve, reject) => {
+    //     ipfs.cat(record.dataUri, (err, ipfsRed) => {
+    //       err ? reject(err) : resolve(ipfsRed);
+    //     });
+    //   });
+    //   console.log({file})
+    // } catch (e) {
+    //   console.log(e)
+    //   return;
+    // }
+    // let decryptedData
+    // // // Decrypt the file using the owner's private key
+    // try {
+    //   const encryptedData = file.toString();
+    //   decryptedData = await this.decrypt('0xb581d5911f2983182558c7b376e37c65725add8230c82019b74ebc963d8f6b07', encryptedData);
+    //   console.log({decryptedData})
+    // } catch (e) {
+    //   console.log(e)
+    //   return;
+    // }
+    // let reencrypted
+    // try {
+    //   reencrypted = await Linnia.util.encrypt('0x67c396d711ad2ba7408f5b1951e0dcec84cb11b6e189f95cab9cff9ef230eb7afce76a42c666b9e2a3499756a8aaa529a375e01e033f80917d9db45f8cbdadef', decryptedData);
+    // } catch (e) {
+    //   console.log(e)
+    //   return;
+    // }
+    // console.log(reencrypted)
+    // // // Upload the viewer encrypted file up to a new location in IPFS
+    // let IPFSDataUri
+    // try {
+    //   [ IPFSDataUri ] = await new Promise((resolve, reject) => {
+    //     ipfs.add(Buffer(reencrypted), (err, ipfsRed) => {
+    //       err ? reject(err) : resolve(ipfsRed);
+    //     });
+    //   });
+    // } catch (e) {
+    //   console.log(e)
+    //   return;
+    // }
+    // console.log(IPFSDataUri)
 
-    // // Create a new permissions record on the blockchain
-    try {
-      const permission = await permissions.grantAccess(dataHash, '0x1f6FD2dB216b6F4958Ee00a41a6Cc19B54383B62', IPFSDataUri.path, {
-        from: owner,
-        gas: 500000,
-      });
-      console.log(permission)
-    } catch (e) {
-      console.error(e);
-      return;
-    }
+    // // // Create a new permissions record on the blockchain
+    // try {
+    //   const permission = await permissions.grantAccess(dataHash, '0x1f6FD2dB216b6F4958Ee00a41a6Cc19B54383B62', IPFSDataUri.path, {
+    //     from: owner,
+    //     gas: 500000,
+    //   });
+    //   console.log(permission)
+    // } catch (e) {
+    //   console.error(e);
+    //   return;
+    // }
 
+  // Use ipfs library to pull the encrypted data down from IPFS
+  const permission = await linnia.getPermission(dataHash, '0x1f6FD2dB216b6F4958Ee00a41a6Cc19B54383B62')
+console.log({permission})
+    ipfs.cat(permission.dataUri, async (err, ipfsRes) => {
+      if (err) {
+        console.log(err);
+      } else {
+        const encrypted = ipfsRes;
+        console.log({encrypted: ipfsRes.toString()})
+        // // Try to decrypt with the provided key
+        try {
+          const decrypted = await this.decrypt('0x44ae90da82985a6f3feb058b5bd0d4e1694b4f4e310db584cee9749bc431d021', encrypted.toString());
+          //record.decrypted = JSON.stringify(decrypted.toString());
+          console.log(decrypted)
+        } catch (e) {
+          console.log(e);
+          return;
+        }
+      }
+    });
+    console.log('attempt to get records')
   }
   render() {
 
