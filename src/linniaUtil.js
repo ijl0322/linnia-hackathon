@@ -30,11 +30,9 @@ async function decrypt(privKey, encrypted) {
 }
 
 async function addRecord(recordJson) {
-	const { _, users, records } = await linnia.getContractInstances()
-	const accts = await web3.eth.getAccounts()
-	let encrypted = await Linnia.util.encrypt(publicKey, recordJson)
-
 	console.log('Add Record')
+	const { records } = await linnia.getContractInstances()
+	let encrypted = await Linnia.util.encrypt(publicKey, recordJson)
 	const [ ipfsRecord ] = await ipfs.add(Buffer(encrypted))
 		.catch(console.log)
 	console.log({ ipfsRecord })
@@ -46,8 +44,9 @@ async function addRecord(recordJson) {
 	console.log({ dataUri })
 
 	try {
-		const res = await records.addRecord(dataHash, 'foo', dataUri, { from: owner, gas: 500000 });
-		console.log(res)
+		await records.addRecord(dataHash, 'User Data', dataUri, { from: owner, gas: 500000 });
+		console.log(dataUri)
+		return dataUri
 	} catch(e) {
 		console.log(e)
 	}
@@ -119,7 +118,7 @@ async function grantPermission(dataUri, ownerPrivateKey, receiverPublicKey, rece
 async function getRecord(dataUri, receiverAddress, receiverPrivateKey) {
 	const dataHash = await linnia.web3.utils.sha3(dataUri);
 	const permission = await linnia.getPermission(dataHash, receiverAddress)
-		ipfs.cat(permission.dataUri, async (err, ipfsRes) => {
+	ipfs.cat(permission.dataUri, async (err, ipfsRes) => {
 		if (err) {
 			console.log(err);
 		} else {
