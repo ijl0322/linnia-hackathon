@@ -118,20 +118,21 @@ async function grantPermission(dataUri, ownerPrivateKey, receiverPublicKey, rece
 async function getRecord(dataUri, receiverAddress, receiverPrivateKey) {
 	const dataHash = await linnia.web3.utils.sha3(dataUri);
 	const permission = await linnia.getPermission(dataHash, receiverAddress)
-	ipfs.cat(permission.dataUri, async (err, ipfsRes) => {
-		if (err) {
-			console.log(err);
-		} else {
-			const encrypted = ipfsRes;
-			console.log({encrypted: ipfsRes.toString()})
-			try {
-				const decrypted = await decrypt(receiverPrivateKey, encrypted.toString());
-				return JSON.stringify(decrypted.toString())
-			} catch (e) {
-				console.log(e);
-				return;
+	return new Promise((resolve, reject) => {
+		ipfs.cat(permission.dataUri, async (err, ipfsRes) => {
+			if (err) {
+				reject(err);
+			} else {
+				const encrypted = ipfsRes;
+				console.log({encrypted: ipfsRes.toString()})
+				try {
+					const decrypted = await decrypt(receiverPrivateKey, encrypted.toString());
+					resolve(decrypted)
+				} catch (e) {
+					reject(e);
+				}
 			}
-		}
+		})
 	})
 }
 

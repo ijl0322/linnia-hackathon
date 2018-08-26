@@ -16,7 +16,7 @@ class App extends Component {
     //const newUri = await LinniaUtil.addRecord(recordJson)
     //LinniaUtil.grantPermission(dataHashString, ownerPrivateKey, receiverPublicKey, receiverAddress)
     const results = await LinniaUtil.getRecord(dataHashString, receiverAddress, receiverPrivateKey)
-    console.log({results})
+    console.log(results)
   }
 
   render() {
